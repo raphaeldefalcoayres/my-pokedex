@@ -17,11 +17,9 @@ const Home = () => {
   const router = useRouter()
   const [typeSelected, setTypeSelected] = useState(router.query.types)
   const [habitatSelected, setHabitatSelected] = useState(router.query.habitat)
-  const [openMenuMobile, setOpenMenuMobile] = useState(isMobile())
+  const [openMenuMobile, setOpenMenuMobile] = useState(false)
   const { data: pokemons, isLoading } = usePokemons(router?.query)
   const { data: habitats } = useHabitats()
-
-  console.log(isMobile())
 
   useEffect(() => {
     if (router.query.types) setTypeSelected(router.query.types)

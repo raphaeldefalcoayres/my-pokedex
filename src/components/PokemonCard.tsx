@@ -19,7 +19,7 @@ export const PokemonCard = (pokemon: Pokemon) => {
   })
 
   return (
-    <div className="flex flex-col mt-10 px-4 pt-4 w-full md:w-1/2 xl:w-1/4 2xl:w-1/5">
+    <div className="flex flex-col mt-10 px-4 pt-4 w-full md:w-1/3 xl:w-1/5 2xl:w-1/6">
       <div className="group min-h-[350px] relative flex flex-col px-4 pt-4 rounded-[40px] w-full bg-primary_light2 shadow-sm transition ease-in-out hover:-translate-y-1 hover:scale-110 duration-300">
         <div className="flex w-full">
           <div
