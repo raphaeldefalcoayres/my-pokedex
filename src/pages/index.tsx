@@ -1,266 +1,146 @@
+import { dehydrate, QueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
-import { FaLeaf, FaSkullCrossbones } from 'react-icons/fa'
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
+import { FaFilter } from 'react-icons/fa'
+import { IoMdClose, IoMdMenu } from 'react-icons/io'
+import { LoadingSpinner } from '../components/LoadingSpinner'
+import { PokemonCard } from '../components/PokemonCard'
+import { fetchHabitats, useHabitats } from '../hooks/useHabitats'
+import { useMobileDetect } from '../hooks/useIsMobileDetect'
+import { fetchPokemons, usePokemons } from '../hooks/usePokemons'
 import { Pokemon } from '../interfaces'
+import { pokemonTypes } from '../utils'
 
-export default function Home() {
-  const pokemon: Pokemon = {
-    id: '001',
-    name: 'bulbasaur',
-    img: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/001.png',
-    weight: 69,
-    height: 7,
-    base_experience: 64,
-    color: 'green',
-    evolves_from_species: false,
-    types: 'poison,grass',
-    species: {
-      name: 'bulbasaur',
-      url: 'https://pokeapi.co/api/v2/pokemon-species/1/',
-    },
-    habitat: 'grassland',
-    evolution: [
-      {
-        id: 1,
-        name: 'bulbasaur',
-        img: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/001.png',
-      },
-      {
-        id: 2,
-        name: 'ivysaur',
-        minLevel: 16,
-        img: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/002.png',
-      },
-      {
-        id: 3,
-        name: 'venusaur',
-        minLevel: 32,
-        img: 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/003.png',
-      },
-    ],
-    stats: [
-      {
-        base_stat: 45,
-        effort: 0,
-        stat: {
-          name: 'speed',
-          url: 'https://pokeapi.co/api/v2/stat/6/',
-        },
-      },
-      {
-        base_stat: 65,
-        effort: 0,
-        stat: {
-          name: 'special-defense',
-          url: 'https://pokeapi.co/api/v2/stat/5/',
-        },
-      },
-      {
-        base_stat: 65,
-        effort: 1,
-        stat: {
-          name: 'special-attack',
-          url: 'https://pokeapi.co/api/v2/stat/4/',
-        },
-      },
-      {
-        base_stat: 49,
-        effort: 0,
-        stat: {
-          name: 'defense',
-          url: 'https://pokeapi.co/api/v2/stat/3/',
-        },
-      },
-      {
-        base_stat: 49,
-        effort: 0,
-        stat: {
-          name: 'attack',
-          url: 'https://pokeapi.co/api/v2/stat/2/',
-        },
-      },
-      {
-        base_stat: 45,
-        effort: 0,
-        stat: {
-          name: 'hp',
-          url: 'https://pokeapi.co/api/v2/stat/1/',
-        },
-      },
-    ],
+const Home = () => {
+  const { isMobile } = useMobileDetect()
+  const router = useRouter()
+  const [typeSelected, setTypeSelected] = useState(router.query.types)
+  const [habitatSelected, setHabitatSelected] = useState(router.query.habitat)
+  const [openMenuMobile, setOpenMenuMobile] = useState(isMobile())
+  const { data: pokemons, isLoading } = usePokemons(router?.query)
+  const { data: habitats } = useHabitats()
+
+  console.log(isMobile())
+
+  useEffect(() => {
+    if (router.query.types) setTypeSelected(router.query.types)
+    if (router.query.habitat) setHabitatSelected(router.query.habitat)
+  }, [router.query])
+
+  if (isLoading) return <LoadingSpinner />
+
+  function handlePushQueryFilter({ type, query }: { type: string; query: string }) {
+    const prevQuery: any = router.query
+
+    if (type === 'habitat' && prevQuery.habitat) {
+      delete prevQuery.habitat
+    }
+    if (type === 'types' && prevQuery.types) {
+      delete prevQuery.types
+    }
+
+    router.push(`?${new URLSearchParams(prevQuery).toString()}&${query}`)
   }
 
-  const pokemonHP: number =
-    pokemon.stats.find((item) => item.stat.name === 'hp')?.base_stat || 0
-  const pokemonSpeed: number =
-    pokemon.stats.find((item) => item.stat.name === 'speed')?.base_stat || 0
-  const pokemonAtack: number =
-    pokemon.stats.find((item) => item.stat.name === 'attack')?.base_stat || 0
-  const pokemonDefense: number =
-    pokemon.stats.find((item) => item.stat.name === 'defense')?.base_stat || 0
-  const pokemonTotal = pokemonHP + pokemonSpeed + pokemonAtack + pokemonDefense
+  function handleResetPokemons() {
+    setTypeSelected('')
+    setHabitatSelected('')
+    router.push('/')
+  }
 
   return (
     <>
-      <header className="w-full flex items-center py-2 px-2 bg-primary_light">
-        <Image
-          src="/logo.svg"
-          width={154}
-          height={34}
-          alt="logotipo escrito My Pokedex"
-        />
-      </header>
-      <main className="flex flex-col md:flex-row gap-4 px-4">
-        <div className="min-h-[400px] relative flex flex-col mt-10 p-4 rounded-3xl w-full bg-primary_light2 shadow-sm">
-          <div className="flex w-full">
-            <div className="-top-[20px] left-0 absolute text-white bg-green py-1 px-2 rounded-t-xl rounded-l-xl font-semibold">
-              #{pokemon.id}
-            </div>
-            <div className="text-white text-2xl font-medium capitalize">
-              {pokemon.name}
-            </div>
-            <div className="flex gap-2 mx-3">
-              <div className="w-7 h-7 flex items-center justify-center rounded-full bg-purple text-purple_dark">
-                <FaSkullCrossbones />
-              </div>
-              <div className="w-7 h-7 flex items-center justify-center rounded-full bg-green text-green_dark">
-                <FaLeaf />
-              </div>
-            </div>
-            <div className="absolute -top-10 right-0">
-              <Image
-                width={120}
-                height={170}
-                src="https://assets.pokemon.com/assets/cms2/img/pokedex/full/001.png"
-                alt={`Imagem do pokemon ${pokemon.name}`}
-              />
-            </div>
+      <header className="fixed z-40 w-full gap-2 md:gap-0 flex flex-col md:flex-row items-center py-2 px-2 bg-primary_light shadow-lg">
+        <div className="flex w-full md:w-auto justify-between">
+          <Image src="/logo.svg" width={154} height={34} alt="logotipo escrito My Pokedex" />
+          {isMobile() && (
+            <button className="" onClick={() => setOpenMenuMobile(!openMenuMobile)}>
+              {!openMenuMobile ? <IoMdMenu className="ml-auto" size={32} /> : <IoMdClose size={32} />}
+            </button>
+          )}
+        </div>
+        <div
+          className={`${
+            isMobile() && !openMenuMobile ? 'hidden' : 'flex'
+          } flex-col md:flex-row gap-2 md:gap-0 mx-auto items-center`}
+        >
+          <div className="flex mr-3">
+            <FaFilter className="mr-2" />
+            Filters:
           </div>
-          <div className="flex w-full text-white">
-            Habitat: <b className="capitalize ml-2">{pokemon.habitat}</b>
+          <div className="bg-yellow rounded-xl px-2 py-2 text-primary_light mr-2">
+            Total: <strong>{pokemons.length}</strong>
           </div>
-          <div className="text-primary_light3 font-semibold">
-            {pokemon.weight}kg {pokemon.height}m
-          </div>
-          <div className="mt-10 flex w-full px-2 flex-wrap">
-            <div className="flex w-1/2">
-              <div className="w-full relative bg-red_dark rounded-full h-4 flex items-center mr-1">
-                <div className="-top-[20px] -left-2 absolute text-white bg-red_light px-2 rounded-t-2xl rounded-l-2xl text-sm font-medium">
-                  HP
-                </div>
-                <div
-                  className="bg-red h-4 flex items-center rounded-full w-20 text-white text-sm"
-                  style={{
-                    width: `${(pokemonHP * 100) / (pokemonHP + 100)}%`,
-                  }}
-                >
-                  <span className="mx-auto">{pokemonHP}</span>
-                </div>
-                <span className="ml-auto text-white text-sm mr-1">
-                  {pokemonHP + 100}
-                </span>
+          <div className="flex flex-wrap bg-primary rounded-xl p-2 gap-2">
+            <a onClick={() => handleResetPokemons()}>
+              <div
+                title={`Select all`}
+                className={`w-7 h-7 cursor-pointer flex items-center justify-center rounded-xl bg-white text-black ${
+                  !typeSelected && !habitatSelected ? 'border-2 border-yellow shadow-sm shadow-yellow' : ''
+                }`}
+              >
+                All
               </div>
-            </div>
-            <div className="flex w-1/2">
-              <div className="w-full relative bg-yellow_dark rounded-full h-4 flex items-center ml-1">
-                <div className="-top-[20px] -right-2 absolute text-white bg-yellow_light px-2 rounded-t-2xl rounded-r-2xl text-sm font-medium">
-                  Speed
-                </div>
-                <div
-                  className={`bg-yellow h-4 flex items-center rounded-full text-white text-sm`}
-                  style={{
-                    width: `${(pokemonSpeed * 100) / (pokemonSpeed + 100)}%`,
-                  }}
+            </a>
+            {pokemonTypes
+              .filter((type: any) => type.name !== 'eletric')
+              .map((pokemonType: any) => (
+                <a
+                  onClick={() => handlePushQueryFilter({ type: 'types', query: `types=${pokemonType.name}` })}
+                  key={`link-${pokemonType.name}`}
                 >
-                  <span className="mx-auto">{pokemonSpeed}</span>
-                </div>
-                <span className="ml-auto text-white text-sm mr-1">
-                  {pokemonSpeed + 100}
-                </span>
-              </div>
-            </div>
-            <div className="flex w-1/2 mt-10">
-              <div className="w-full relative bg-purple_dark rounded-full h-4 flex items-center mr-1">
-                <div className="-top-[20px] -left-2 absolute text-white bg-purple_light px-2 rounded-t-2xl rounded-l-2xl text-sm font-medium">
-                  Atack
-                </div>
-                <div
-                  className="bg-purple h-4 flex items-center rounded-full w-20 text-white text-sm"
-                  style={{
-                    width: `${(pokemonAtack * 100) / (pokemonAtack + 100)}%`,
-                  }}
-                >
-                  <span className="mx-auto">{pokemonAtack}</span>
-                </div>
-                <span className="ml-auto text-white text-sm mr-1">
-                  {pokemonAtack + 100}
-                </span>
-              </div>
-            </div>
-            <div className="flex w-1/2 mt-10">
-              <div className="w-full relative bg-blue_dark rounded-full h-4 flex items-center ml-1">
-                <div className="-top-[20px] -right-2 absolute text-white bg-blue_light px-2 rounded-t-2xl rounded-r-2xl text-sm font-medium">
-                  Defense
-                </div>
-                <div
-                  className={`bg-blue h-4 flex items-center rounded-full text-white text-sm`}
-                  style={{
-                    width: `${
-                      (pokemonDefense * 100) / (pokemonDefense + 100)
-                    }%`,
-                  }}
-                >
-                  <span className="mx-auto">{pokemonDefense}</span>
-                </div>
-                <span className="ml-auto text-white text-sm mr-1">
-                  {pokemonDefense + 100}
-                </span>
-              </div>
-            </div>
-            <div className="flex w-full mt-10">
-              <div className="w-full relative bg-green_dark rounded-full h-4 flex items-center ml-1">
-                <div className="-top-[20px] -left-2 absolute text-white bg-green_light px-2 rounded-t-2xl rounded-l-2xl text-sm font-medium">
-                  Total
-                </div>
-                <div
-                  className={`bg-green h-4 flex items-center rounded-full text-white text-sm`}
-                  style={{
-                    width: `${(pokemonTotal * 100) / 1000}%`,
-                  }}
-                >
-                  <span className="mx-auto">{pokemonTotal}</span>
-                </div>
-                <span className="ml-auto text-white text-sm mr-1">1000</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col mt-6">
-            <strong className="text-primary_light4 text-xl font-medium">
-              Evolutions
-            </strong>
-            <div className="flex justify-between">
-              {pokemon.evolution.map((evolution) => (
-                <div
-                  key={evolution.id}
-                  className="flex flex-col items-center justify-center"
-                >
-                  <div className="text-primary_light3">#{evolution.id}</div>
-                  <div className="text-primary_light4 capitalize">
-                    {evolution.name}
+                  <div
+                    title={`Select a type ${pokemonType.name}`}
+                    className={`w-7 h-7 cursor-pointer flex items-center justify-center rounded-xl bg-${
+                      pokemonType.color
+                    } text-${pokemonType.color}_dark  ${
+                      typeSelected === pokemonType.name ? 'border-2 border-yellow shadow-sm shadow-yellow' : ''
+                    }`}
+                  >
+                    {pokemonType.icon}
                   </div>
-                  <div>
-                    <Image
-                      width={76}
-                      height={109}
-                      src={evolution.img}
-                      alt={`Imagem do pokemon ${pokemon.name}`}
-                    />
-                  </div>
-                </div>
+                </a>
               ))}
-            </div>
+          </div>
+          <div className="flex items-center ml-2">
+            <select
+              className="py-3 px-4 rounded-xl bg-primary"
+              onChange={(e) => handlePushQueryFilter({ type: 'habitat', query: `habitat=${e.target.value}` })}
+            >
+              <option value="">Select habitat</option>
+              {habitats &&
+                Object.entries(habitats).map((habitat, index) => (
+                  <option selected={habitatSelected === habitat[0]} key={index} value={habitat[0]}>
+                    <>
+                      {habitat[0]} [{habitat[1]}]
+                    </>
+                  </option>
+                ))}
+            </select>
           </div>
         </div>
+      </header>
+      <main className="flex flex-col md:flex-row md:flex-wrap pt-10">
+        {pokemons.map((pokemon: Pokemon) => (
+          <PokemonCard key={pokemon.name} {...pokemon} />
+        ))}
       </main>
     </>
   )
 }
+
+export async function getStaticProps() {
+  const queryClient = new QueryClient()
+
+  await queryClient.prefetchQuery(['pokemons:all'], () => fetchPokemons())
+  await queryClient.prefetchQuery(['habitats'], () => fetchHabitats())
+
+  return {
+    props: {
+      dehydratedState: dehydrate(queryClient),
+    },
+  }
+}
+
+export default Home

@@ -13,4 +13,8 @@
     @apply bg-primary text-secondary;
     font: 400 16px Nunito, sans-serif;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
 }
